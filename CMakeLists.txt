@@ -7,8 +7,29 @@ project(gitlite LANGUAGES CXX)
 # 1. 在 build/ 中创建一个名称为 gitlite 的可执行目标；
 # 2. 将 main.cpp 和所有需要的实现文件加入该目标；
 # 3. 自行设置所需的 C++ 标准、头文件目录和编译选项。
-
-
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+add_executable(gitlite
+    main.cpp
+    src/SomeObj.cpp
+    src/Commit.cpp
+    src/Repository.cpp
+    src/Utils.cpp
+    src/GitliteException.cpp
+    src/ObjectStore.cpp
+    src/Index.cpp
+    src/Refs.cpp
+    src/IgnoreRules.cpp
+    src/Revision.cpp
+    src/Status.cpp
+    src/WorkTree.cpp
+    src/Checkout.cpp
+    src/Merge.cpp
+)
+target_include_directories(gitlite PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(gitlite PRIVATE -Wall -Wextra)
 # ==================== ACMOJ 配置（请勿删除）====================
 # ACMOJ 的 Git 评测会从仓库根目录读取名为 code 的编译产物。
 # 上方必须已经通过 add_executable(gitlite ...) 创建 gitlite 目标。
