@@ -12,6 +12,7 @@
 #include "../include/Status.h"
 #include "../include/Checkout.h"
 #include "../include/Merge.h"
+#include "../include/Remote.h"
 #include<ctime>
 SomeObj::SomeObj() {}
 
@@ -240,7 +241,8 @@ void SomeObj::status() {
 void SomeObj::branch(const std::string& b) {
     // TODO: 新建指向当前提交的分支，不切换
     Refs refs{".gitlite"};
-    if(refs.branchExists(b)){
+    Remote rem{".gitlite"};
+    if(refs.branchExists(b) || rem.exists(b)){
         Utils::message("A branch with that name already exists.");
         return;
     }
@@ -368,24 +370,55 @@ void SomeObj::merge(const std::string& b) {
 
 // ---------------- Bonus-1：add-remote / rm-remote / push / fetch / pull ----------------
 
-void SomeObj::addRemote(const std::string&, const std::string&) {
+void SomeObj::addRemote(const std::string& n, const std::string& p) {
     // TODO: 保存远程仓库地址
+    Refs refs{".gitlite"};
+    Remote rem{".gitlite"};
+
+    if(rem.exists(n) || refs.branchExists(n)){
+        Utils::message("A remote with that name already exists.");
+        return;
+    }
+    rem.add(n, p);
 }
 
-void SomeObj::rmRemote(const std::string&) {
+void SomeObj::rmRemote(const std::string& n) {
     // TODO: 删除远程仓库信息
+    Remote rem{".gitlite"};
+    if(!rem.exists(n)){
+        Utils::message("A remote with that name does not exist.");
+        return;
+    }
+    rem.remove(n);
 }
 
-void SomeObj::push(const std::string&, const std::string&) {
+void SomeObj::push(const std::string& n, const std::string& b) {
     // TODO: 将当前分支的提交推送到远程分支
+    Remote rem{".gitlite"};
+    rem.push(n, b);
 }
 
-void SomeObj::fetch(const std::string&, const std::string&) {
+void SomeObj::fetch(const std::string& n, const std::string& b) {
     // TODO: 将远程分支的提交与 blob 复制到本地
+    Remote rem{".gitlite"};
+    rem.fetch(n, b);
 }
 
-void SomeObj::pull(const std::string&, const std::string&) {
+void SomeObj::pull(const std::string& n, const std::string& b) {
     // TODO: fetch 后将取回的分支合并到当前分支
+    Remote rem{".gitlite"};
+    if(!rem.fetch(n ,b)){
+        return;
+    }
+
+    Refs refs{".gitlite"};
+    ObjectStore store{".gitlite/objects"};
+    Index idx{".gitlite/index"};
+    idx.load();
+    WorkTree wt{"."};
+
+    Merge merge{refs, store, idx, wt};
+    merge.run(n + "/" + b);
 }
 
 // ---------------- Bonus-2：diff / show ----------------

@@ -29,3 +29,11 @@ std::string ObjectStore::readObject(const std::string& sha) const{
 std::vector<std::string> ObjectStore::listObjects() const{
     return Utils::plainFilenamesIn(dir_);
 }
+
+void ObjectStore::importFrom(const ObjectStore& src){
+    std::vector<std::string> objects{src.listObjects()};
+    for(auto object : objects){
+        if(exists(object)) continue;
+        Utils::writeContents(Utils::join(dir_, object), src.readObject(object));
+    }
+}//从src把仓库搬过来

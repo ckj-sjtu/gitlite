@@ -27,6 +27,7 @@ add_executable(gitlite
     src/WorkTree.cpp
     src/Checkout.cpp
     src/Merge.cpp
+    src/Remote.cpp
 )
 target_include_directories(gitlite PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(gitlite PRIVATE -Wall -Wextra)

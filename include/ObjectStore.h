@@ -11,6 +11,8 @@ public:
     std::string writeCommit(const std::string& serialized);
     std::string readObject(const std::string& sha) const;
     std::vector<std::string> listObjects() const;
+
+    void importFrom(const ObjectStore& src);
 private:
     std::string dir_;
 };

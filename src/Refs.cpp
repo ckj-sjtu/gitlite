@@ -1,6 +1,30 @@
 #include"../include/Refs.h"
 #include"../include/Utils.h"
 #include<cstdio>
+#include<dirent.h>
+#include<algorithm>
+
+namespace{
+    void collectBranches(const std::string& root, const std::string& prefix, std::vector<std::string>& out){
+        std::string full{Utils::join(root, prefix)};
+        DIR* d{opendir(full.c_str())};
+        if(d == nullptr) return;
+
+        struct dirent* e;
+        while((e = readdir(d)) != nullptr){
+            std::string n{e->d_name};
+            if(n == "." || n == "..") continue;
+            std::string rel{prefix.empty() ? n : prefix + "/" + n};
+            if(Utils::isDirectory(Utils::join(root, rel))){
+                collectBranches(root, rel, out);
+            }
+            else{
+                out.push_back(rel);
+            }
+        }
+        closedir(d);
+    }//把refs/branches下的所有分支名收集到out里
+}
 
 Refs::Refs(const std::string& gitliteDir) : dir_{gitliteDir}{}
 std::string Refs::currentBranch() const{
@@ -15,15 +39,18 @@ std::string Refs::currentBranch() const{
     }
     return "";
 }//返回当前branch name
+
 std::string Refs::headCommit() const{
     return getBranch(currentBranch());
 }//head->commit sha
 void Refs::setHeadBranch(const std::string& name){
     Utils::writeContents(Utils::join(dir_, "HEAD"), "ref: refs/branches/" + name + "\n");
 }//change branch
+
 bool Refs::branchExists(const std::string& name) const{
     return Utils::isFile(Utils::join(Utils::join(dir_, "refs/branches"), name));
 }
+
 std::string Refs::getBranch(const std::string& name) const{
     std::string path{Utils::join(Utils::join(Utils::join(dir_, "refs"),"branches"), name)};
     if(!Utils::isFile(path)) return "";
@@ -31,18 +58,25 @@ std::string Refs::getBranch(const std::string& name) const{
     while(!s.empty() && (s.back() == '\n' || s.back() == '\r')) s.pop_back();
     return s; 
 }//name分支最新的commit sha
+
 void Refs::setBranch(const std::string& name, const std::string& sha){
     Utils::writeContents(Utils::join(Utils::join(dir_, "refs/branches"), name), sha + "\n");
 }//写refs/branches/<name> 内容为<sha>\n
+
 std::vector<std::string> Refs::listBranches() const {
-    return Utils::plainFilenamesIn(Utils::join(dir_, "refs/branches"));
+    std::vector<std::string> out;
+    collectBranches(Utils::join(dir_, "refs/branches"), "", out);
+    std::sort(out.begin(), out.end());
+    return out;
 }//列出所有的branches
 std::vector<std::string> Refs::listTags() const{
     return Utils::plainFilenamesIn(Utils::join(dir_, "refs/tags"));
 }//列出所有的Tags
+
 bool Refs::tagExists(const std::string& name) const{
     return Utils::isFile(Utils::join(Utils::join(dir_, "refs/tags"), name));
 }//检测name作为Tag存不存在
+
 std::string Refs::getTag(const std::string& name) const{
     std::string path{Utils::join(Utils::join(dir_, "refs/tags"), name)};
     if(!Utils::isFile(path)) return "";
